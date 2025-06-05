@@ -1,5 +1,3 @@
-
-````markdown
 # 🤖 Akyba Bot
 
 **Akyba Bot** is a professional Telegram bot built for the [Akyba Web3](https://akyba.io) community.  
