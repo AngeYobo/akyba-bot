@@ -90,5 +90,3 @@ akyba-bot/
 ## 📜 License
 
 MIT – Made with ❤️ for the Akyba community.
-
-```
