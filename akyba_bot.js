@@ -47,6 +47,17 @@ function generateCaptcha(userId) {
   };
 }
 
+// === /start debug command ===
+bot.start(ctx => {
+  console.log('✅ /start triggered');
+  ctx.reply('👋 Akyba Bot is alive and running!');
+});
+
+// === Catch all messages (for debug only)
+bot.on('message', ctx => {
+  console.log(`📩 Received message: ${ctx.message.text || '[non-text]'}`);
+});
+
 // === On New Member ===
 bot.on(message('new_chat_members'), async (ctx) => {
   const user = ctx.message.new_chat_members[0];
@@ -55,6 +66,8 @@ bot.on(message('new_chat_members'), async (ctx) => {
   const chatId = ctx.chat.id;
   const lang = ctx.message.from.language_code === 'fr' ? 'fr' : 'en';
   const T = i18n[lang];
+
+  console.log(`👤 New member detected: ${name} (${userId}) in chat ${chatId}`);
 
   const { correct, keyboard } = generateCaptcha(userId);
 
@@ -65,6 +78,7 @@ bot.on(message('new_chat_members'), async (ctx) => {
       try {
         await ctx.kickChatMember(userId);
         await ctx.reply(T.timeoutKick(name));
+        console.log(`⛔ ${name} kicked for not verifying`);
       } catch (e) {
         console.warn('Kick failed:', e.message);
       }
@@ -77,6 +91,7 @@ bot.on(message('new_chat_members'), async (ctx) => {
     await ctx.restrictChatMember(userId, {
       can_send_messages: false,
     });
+    console.log(`🔒 User ${name} restricted`);
   } catch (e) {
     console.warn('Restrict failed:', e.message);
   }
@@ -127,6 +142,7 @@ bot.on('callback_query', async (ctx) => {
       userId, userName, lang
     ]);
 
+    console.log(`✅ ${userName} verified via emoji`);
     await ctx.answerCbQuery("✅ Verified!");
     await ctx.reply(T.verifySuccess(userName));
   } else {
@@ -134,32 +150,21 @@ bot.on('callback_query', async (ctx) => {
   }
 });
 
+// === Launch ===
 console.log("");
-console.log("Wellcome to the Akyba Bot!");
-console.log("");
+console.log("👋 Welcome to the Akyba Bot!");
 console.log("🤖 Akyba Bot is running with emoji CAPTCHA, auto-kick, logging, and multi-language support.");
 console.log("");
-// === Launch ===
-bot.launch().then(() => {
-  console.log("🤖 Akyba Bot is running with emoji CAPTCHA, auto-kick, logging, and multi-language support.");
-}).catch(console.error);
-// Handle graceful shutdown
+bot.launch().catch(console.error);
+
+// Graceful shutdown
 process.on('SIGINT', () => {
   bot.stop('SIGINT');
   db.close();
-  console.log("🤖 Akyba Bot stopped gracefully.");
+  console.log("🛑 Akyba Bot stopped (SIGINT).");
 });
 process.on('SIGTERM', () => {
   bot.stop('SIGTERM');
   db.close();
-  console.log("🤖 Akyba Bot stopped gracefully.");
+  console.log("🛑 Akyba Bot stopped (SIGTERM).");
 });
-// Handle new member verification with CAPTCHA
-// bot.on('new_chat_members', async (ctx) => {
-//   const user = ctx.message.new_chat_members[0];
-//   const name = user.first_name;  
-//   const userId = user.id;
-//   const chatId = ctx.chat.id;        
-//   const lang = ctx.message.from.language_code === 'fr' ? 'fr' : 'en';
-//   const T = i18n[lang];
-//      
